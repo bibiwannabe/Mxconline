@@ -20,7 +20,7 @@ class CourseOrg(models.Model):
     fav_num = models.IntegerField(default=0, verbose_name=u'收藏数')
     image = models.ImageField(upload_to='org/%Y/%m', verbose_name=u'封面图')
     add = models.CharField(max_length=150, verbose_name=u'地址')
-    city = models.ForeignKey(CityDict, verbose_name=u'机构城市', on_delete=False)
+    city = models.ForeignKey(CityDict, verbose_name=u'机构城市')
     add_time = models.DateTimeField(default=datetime.now)
 
     class Meta:
@@ -29,7 +29,7 @@ class CourseOrg(models.Model):
 
 
 class Teacher(models.Model):
-    org = models.ForeignKey(CourseOrg, verbose_name=u'所属机构', on_delete=False)
+    org = models.ForeignKey(CourseOrg, verbose_name=u'所属机构')
     name = models.CharField(max_length=50, verbose_name=u'教师名称')
     work_year = models.IntegerField(default=0, verbose_name=u'工作年限')
     work_company = models.CharField(max_length=50, verbose_name=u'就职公司')
