@@ -19,7 +19,7 @@ class CustomBackend(ModelBackend):
             if user.check_password(password):
                 return user
         except Exception as e:
-            return  None
+            return None
 
 
 class LoginView(View):

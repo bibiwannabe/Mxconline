@@ -1,6 +1,7 @@
 #coding=utf-8
 from django.db import models
 from datetime import datetime
+from organization.models import CourseOrg
 
 #from organization.models import CourseOrg
 
@@ -16,12 +17,13 @@ class Course(models.Model):
     image = models.ImageField(upload_to='course/%Y/%m', verbose_name=u'封面图', max_length=100)
     click_nums = models.IntegerField(default=0, verbose_name=u'课程点击量')
     add_time = models.DateTimeField(default=datetime.now, verbose_name=u'添加时间')
+    org = models.ForeignKey(CourseOrg,verbose_name=u'课程机构', null=True)
 
     class Meta:
         verbose_name = u'课程'
         verbose_name_plural = verbose_name
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
