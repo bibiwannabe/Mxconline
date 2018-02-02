@@ -28,7 +28,7 @@
                         {% for course in all_course.object_list %}
 
                             <div class="box">
-                                <a href="course-detail.html">
+                                <a href="{% url 'course:course_detail' course.id %}">
                                     <img width="280" height="350" class="scrollLoading" src="{{ MEDIA_URL }}{{ course.image }}"/>
                                 </a>
                                 <div class="des">
@@ -39,7 +39,7 @@
                                     <span class="fr">学习人数：{{ course.student }}&nbsp;</span>
                                 </div>
                                 <div class="bottom">
-                                    <a href="course-detail.html"><span class="fl">来自{{ course.org }}</span></a>
+                                    <a href="{% url 'course:course_detail' course.id %}"><span class="fl">来自{{ course.org }}</span></a>
                                     <span class="star fr  notlogin
                                         " data-favid="15">
                                         {{ course.fav_num }}
@@ -89,7 +89,7 @@
 						</dt>
 						<dd>
 							<a target="_blank" href=""><h2> {{ course.name }}</h2></a>
-							<span class="fl">难度：<i class="key">{{ course.degree }}</i></span>
+							<span class="fl">难度：<i class="key">{{ course.get_degree_display }}</i></span>
 						</dd>
 					</dl>
                     {% endfor %}

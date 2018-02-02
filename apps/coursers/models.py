@@ -1,9 +1,7 @@
 #coding=utf-8
 from django.db import models
 from datetime import datetime
-from organization.models import CourseOrg
-
-#from organization.models import CourseOrg
+from organization.models import CourseOrg, Teacher
 
 # Create your models here.
 class Course(models.Model):
@@ -18,6 +16,11 @@ class Course(models.Model):
     click_nums = models.IntegerField(default=0, verbose_name=u'课程点击量')
     add_time = models.DateTimeField(default=datetime.now, verbose_name=u'添加时间')
     org = models.ForeignKey(CourseOrg,verbose_name=u'课程机构', null=True)
+    category = models.CharField(default='', max_length=20, verbose_name=u'课程类别')
+    tag = models.CharField(default='',max_length=20,verbose_name=u'课程标签')
+    teacher = models.ForeignKey(Teacher, null=True, verbose_name=u'讲师')
+    need_know = models.CharField(max_length=300, default='', verbose_name=u'课程须知')
+    what_to_learn = models.CharField(max_length=300, default='',verbose_name=u'学什么')
 
     class Meta:
         verbose_name = u'课程'
@@ -26,9 +29,24 @@ class Course(models.Model):
     def __str__(self):
         return self.name
 
+    def get_zj_nums(self):
+        all_lesson = self.lesson_set.all()
+        return all_lesson.count()
+
+    def get_learn_users(self):
+        if self.usercourse_set.all().count()>5:
+            return self.usercourse_set.all()[:5]
+        else:
+            return self.usercourse_set.all()
+
+    def get_course_lesson(self):
+        return self.lesson_set.all()
+
+    def get_course_resource(self):
+        return self.courseresource_set.all()
 
 class Lesson(models.Model):
-    name = models.CharField(max_length=100, verbose_name=u'课程名')
+    name = models.CharField(max_length=100, verbose_name=u'章节名称')
     course = models.ForeignKey(Course, verbose_name=u'课程')
     add_time = models.DateTimeField(default=datetime.now, verbose_name=u'添加时间')
 
@@ -36,15 +54,26 @@ class Lesson(models.Model):
         verbose_name = u'课程章节'
         verbose_name_plural = verbose_name
 
+    def __str__(self):
+        return self.name
+
+    def get_lesson_video(self):
+        return self.video_set.all()
+
 
 class Video(models.Model):
     name = models.CharField(max_length=100, verbose_name=u'视频名')
     add_time = models.DateTimeField(default=datetime.now, verbose_name=u'添加时间')
     lesson = models.ForeignKey(Lesson, verbose_name=u'课程')
+    url = models.CharField(max_length=200, default='', verbose_name=u'访问地址')
 
     class Meta:
         verbose_name = u'视频'
         verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.name
+
 
 class CourseResource(models.Model):
     name = models.CharField(max_length=100, verbose_name=u'资料名')
@@ -55,3 +84,6 @@ class CourseResource(models.Model):
     class Meta:
         verbose_name = u'课程资源'
         verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.name
