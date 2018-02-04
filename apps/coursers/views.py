@@ -1,15 +1,16 @@
 #coding=utf-8
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import View
 from django.http import HttpResponse
+from utils.mixin_utils import LoginRequiredMixin
 
 
 from pure_pagination import Paginator, EmptyPage, PageNotAnInteger
 
 
-from .models import Course, Lesson
+from .models import Course, Lesson, Video
 from organization.models import CourseOrg
-from operation.models import CourseComments, UserFavorite
+from operation.models import CourseComments, UserFavorite, UserCourse
 
 
 # Create your views here.
@@ -66,9 +67,19 @@ class CourseDetailView(View):
         return render(request, 'course-detail.html', data)
 
 
-class CourseVideoView(View):
+class CourseVideoView(LoginRequiredMixin, View):
     def get(self,request,course_id):
         course = Course.objects.get(id=int(course_id))
+
+        has_learned = UserCourse.objects.filter(user=request.user,course=course)
+        if not has_learned:
+            usercourse = UserCourse(user=request.user, course=course)
+            usercourse.save()
+        user_courses = UserCourse.objects.filter(course=course)
+        user_ids = [user_course.user.id for user_course in user_courses]
+        all_user_courses = UserCourse.objects.filter(user_id__in=user_ids)
+        all_courses_id = [user_course.course_id for user_course in all_user_courses]
+        other_courses = Course.objects.filter(id__in=all_courses_id).order_by('-click_nums')[:3]
         all_lesson = Lesson.objects.filter(course_id=int(course_id))
         org = CourseOrg.objects.get(id=course.org_id)
 
@@ -76,13 +87,19 @@ class CourseVideoView(View):
             'course':course,
             'org':org,
             'all_lesson':all_lesson,
+            'other_courses':other_courses,
         }
         return render(request, 'course-video.html', data)
 
 
-class CourseCommentView(View):
+class CourseCommentView(LoginRequiredMixin, View):
     def get(self,request,course_id):
         course = Course.objects.get(id=int(course_id))
+        user_courses = UserCourse.objects.filter(course=course)
+        user_ids = [user_course.user.id for user_course in user_courses]
+        all_user_courses = UserCourse.objects.filter(user_id__in=user_ids)
+        all_courses_id = [user_course.course_id for user_course in all_user_courses]
+        other_courses = Course.objects.filter(id__in=all_courses_id).order_by('-click_nums')[:3]
         all_comment = CourseComments.objects.filter(course=int(course_id)).order_by('-add_time')
         org = CourseOrg.objects.get(id=course.org_id)
 
@@ -90,6 +107,7 @@ class CourseCommentView(View):
             'course':course,
             'org':org,
             'all_comments': all_comment,
+            'other_courses': other_courses,
         }
         return render(request, 'course-comment.html', data)
 
@@ -110,6 +128,26 @@ class AddComment(View):
             return HttpResponse('{"status":"success", "msg":"添加成功"}', content_type='application/json')
         else:
             return HttpResponse('{"status":"fail", "msg":"course_id erro"}', content_type='application/json')
+
+
+class VedioPlayView(View):
+    def get(self,request,video_id):
+        video = Video.objects.get(id=int(video_id))
+        lesson = video.lesson
+        course = lesson.course
+        user_courses = UserCourse.objects.filter(course=course)
+        user_ids = [user_course.user.id for user_course in user_courses]
+        all_user_courses = UserCourse.objects.filter(user_id__in=user_ids)
+        all_courses_id = [user_course.course_id for user_course in all_user_courses]
+        other_courses = Course.objects.filter(id__in=all_courses_id).order_by('-click_nums')[:3]
+
+        data = {
+            'video': video,
+            'lesson':lesson,
+            'course':course,
+            'other_courses':other_courses,
+        }
+        return render(request,'course-play.html',data)
 
 
 

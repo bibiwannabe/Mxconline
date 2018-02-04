@@ -40,6 +40,7 @@ class CourseOrg(models.Model):
         return self.teacher_set.all().count()
 
 
+
 class Teacher(models.Model):
     org = models.ForeignKey(CourseOrg, verbose_name=u'所属机构')
     name = models.CharField(max_length=50, verbose_name=u'教师名称')
@@ -51,6 +52,7 @@ class Teacher(models.Model):
     fav_num = models.IntegerField(default=0, verbose_name=u'收藏数')
     add_time = models.DateTimeField(default=datetime.now)
     image = models.ImageField(upload_to='teacher/%Y/%m', verbose_name=u'封面图', null=True)
+    age = models.IntegerField(default=20, verbose_name=u'年龄')
 
     class Meta:
         verbose_name = u'教师'

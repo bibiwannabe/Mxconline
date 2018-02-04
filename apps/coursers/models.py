@@ -65,6 +65,7 @@ class Video(models.Model):
     name = models.CharField(max_length=100, verbose_name=u'视频名')
     add_time = models.DateTimeField(default=datetime.now, verbose_name=u'添加时间')
     lesson = models.ForeignKey(Lesson, verbose_name=u'课程')
+    learn_time = models.IntegerField(default=0,verbose_name=u'时长')
     url = models.CharField(max_length=200, default='', verbose_name=u'访问地址')
 
     class Meta:
