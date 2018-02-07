@@ -23,7 +23,10 @@ def generate_random_str(randomlength):
 
 def send_register_email(email, send_type='register'):
     email_record = EmailVerifyRecord()
-    email_record.code = generate_random_str(16)
+    if send_type == 'update_email':
+        email_record.code = generate_random_str(4)
+    else:
+        email_record.code = generate_random_str(16)
     email_record.email = email
     email_record.send_type = send_type
     email_record.save()
@@ -39,9 +42,17 @@ def send_register_email(email, send_type='register'):
         if send_status:
             print('ss')
 
+
     if send_type=='forget':
         email_title = 'Mxonline密码重置链接'
         email_body = '请点击以下链接修改你的密码：http://127.0.0.1:8000/reset/{0}'.format(email_record.code)
+        send_status = send_mail(email_title, email_body, EMAIL_FROM, [email])
+        if send_status:
+            print('ss')
+
+    if send_type=='update_email':
+        email_title = 'Mxonline邮箱修改链接'
+        email_body = '你的邮箱验证码为：{0}'.format(email_record.code)
         send_status = send_mail(email_title, email_body, EMAIL_FROM, [email])
         if send_status:
             print('ss')

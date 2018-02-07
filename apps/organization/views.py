@@ -2,6 +2,7 @@
 from django.shortcuts import render
 from django.views.generic import View
 from django.http import HttpResponse
+from django.db.models import Q
 
 
 from pure_pagination import Paginator, EmptyPage, PageNotAnInteger
@@ -17,8 +18,13 @@ class OrgView(View):
     def get(self,request):
         all_org = CourseOrg.objects.all()
         hot_org = all_org.order_by('-click_num')[0:3]
-        all_city = CityDict.objects.all()
 
+        search_key = request.GET.get('keywords', '')
+        if search_key:
+            all_org = CourseOrg.objects.filter(
+                Q(name__icontains=search_key) | Q(desc__icontains=search_key) )
+
+        all_city = CityDict.objects.all()
         #城市筛选
         city_id = request.GET.get('city', '')
         if city_id:
@@ -51,6 +57,7 @@ class OrgView(View):
             'catgory':catgory,
             'hot_org':hot_org,
             'sort':sort,
+            'search_key':search_key,
         }
         return render(request, 'org_list.html', data)
 
@@ -69,6 +76,8 @@ class OrgHomeView(View):
     def get(self, request, org_id):
         current_page = 'home'
         course_org = CourseOrg.objects.get(id=int(org_id))
+        course_org.click_num = course_org.click_num + 1
+        course_org.save()
         has_fav = False
         if request.user.is_authenticated():
             if UserFavorite.objects.filter(user=request.user, fav_id=int(org_id), fav_type=2):
@@ -121,6 +130,7 @@ class OrgDescView(View):
         }
         return render(request,'org-detail-desc.html', data)
 
+
 class OrgTeacherView(View):
     def get(self, request, org_id):
         current_page = 'teacher'
@@ -153,6 +163,18 @@ class AddFavView(View):
         if exit_record:
             #记录存在则取消收藏
             exit_record.delete()
+            if fav_type == '1':
+                course = Course.objects.get(id=fav_id)
+                course.fav_num-=1
+                course.save()
+            if fav_type == '2':
+                org = CourseOrg.objects.get(id=fav_id)
+                org.fav_num -= 1
+                org.save()
+            if fav_type == '3':
+                teacher = Teacher.objects.get(id=fav_id)
+                teacher.fav_num -= 1
+                teacher.save()
             return HttpResponse('{"status":"success", "msg":"收藏"}', content_type='application/json')
         else:
             user_fav = UserFavorite()
@@ -161,6 +183,18 @@ class AddFavView(View):
                 user_fav.fav_type = int(fav_type)
                 user_fav.user_id = request.user.id
                 user_fav.save()
+                if fav_type == '1':
+                    course = Course.objects.get(id=fav_id)
+                    course.fav_num += 1
+                    course.save()
+                if fav_type == '2':
+                    org = CourseOrg.objects.get(id=fav_id)
+                    org.fav_num += 1
+                    org.save()
+                if fav_type == '3':
+                    teacher = Teacher.objects.get(id=fav_id)
+                    teacher.fav_num += 1
+                    teacher.save()
                 return HttpResponse('{"status":"success", "msg":"已收藏"}', content_type='application/json')
             else:
                 return HttpResponse('{"status":"fail", "msg":"收藏出错"}', content_type='application/json')
@@ -169,11 +203,17 @@ class AddFavView(View):
 class TeacherListView(View):
     def get(self,request):
         all_teacher = Teacher.objects.all().order_by('-add_time')
+        sorted_teacher = all_teacher.order_by('-click_num')[:3]
+        search_key = request.GET.get('keywords', '')
+        if search_key:
+            all_teacher = Teacher.objects.filter(Q(name__icontains=search_key) | Q(work_company__icontains=search_key)
+                                                 |Q(work_position__icontains=search_key))
+
         sort = request.GET.get('sort','')
         if sort=='hot':
             all_teacher = all_teacher.order_by('-click_num')
         teacher_num = all_teacher.count()
-        sorted_teacher = all_teacher.order_by('-click_num')[:3]
+
         try:
             page = request.GET.get('page', 1)
         except PageNotAnInteger:
@@ -186,6 +226,7 @@ class TeacherListView(View):
             'sort':sort,
             'teacher_num':teacher_num,
             'sorted_teacher':sorted_teacher,
+            'search_key':search_key,
         }
         return render(request,'teachers-list.html', data)
 
@@ -193,6 +234,8 @@ class TeacherListView(View):
 class TeacherDetailView(View):
     def get(self,request,teacher_id):
         teacher = Teacher.objects.get(id=int(teacher_id))
+        teacher.click_num = teacher.click_num+1
+        teacher.save()
         all_course = Course.objects.filter(teacher_id=int(teacher_id))
         sorted_teacher = Teacher.objects.all().order_by('-click_num')[:3]
         has_fav_teacher = False

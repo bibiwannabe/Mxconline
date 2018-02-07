@@ -22,14 +22,17 @@ from django.views.static import serve
 from Mxonline.settings import MEDIA_ROOT
 
 
-from user.views import LoginView, RegisterView, ActiveUserView, ForgetView, ResetView, ModifyView
+from user.views import LoginView, RegisterView, ActiveUserView, ForgetView, ResetView, ModifyView,LogoutView,IndexView
+from user.views import PermissionDenied, PageError, PageNotFound
+
 
 
 
 urlpatterns = [
     url(r'^xadmin/', xadmin.site.urls),
-    url('^$', TemplateView.as_view(template_name='index.html'), name='index'),
+    url('^$', IndexView.as_view(), name='index'),
     url('^login/$', LoginView.as_view(), name='login'),
+    url('^logout/$',LogoutView.as_view(), name='logout'),
     url('^register/$', RegisterView.as_view(), name='register'),
     url(r'^captcha/', include('captcha.urls')),
     url(r'^active/(?P<active_code>.*)/$', ActiveUserView.as_view(), name='verication'),
@@ -43,5 +46,10 @@ urlpatterns = [
     url(r'^org/',include('organization.urls', namespace='org')),
     #课程内容
     url(r'^course/',include('coursers.urls', namespace='course')),
+    #用户中心
+    url(r'^user/',include('user.urls', namespace='user')),
 
 ]
+handler403 = PermissionDenied.as_view()
+handler404 = PageNotFound.as_view()
+handler500 = PageError.as_view()

@@ -27,6 +27,7 @@ class CourseOrg(models.Model):
     add = models.CharField(max_length=150, verbose_name=u'地址')
     city = models.ForeignKey(CityDict, verbose_name=u'机构城市')
     add_time = models.DateTimeField(default=datetime.now)
+    tag = models.CharField(default='全国知名',max_length=20,verbose_name=u'机构tag')
     catgory = models.CharField(max_length=20, default='pxjg',choices=(('pxjg','培训机构'),('gr','个人'),('gx','高校')), verbose_name=u'机构类别')
 
     class Meta:
@@ -60,5 +61,11 @@ class Teacher(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_course_num(self):
+        return self.course_set.all().count()
+
+    def get_latest_course(self):
+        return self.course_set.all().order_by('-add_time')[:1]
 
 

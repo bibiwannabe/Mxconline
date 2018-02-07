@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import View
 from django.http import HttpResponse
 from utils.mixin_utils import LoginRequiredMixin
+from django.db.models import Q
 
 
 from pure_pagination import Paginator, EmptyPage, PageNotAnInteger
@@ -19,6 +20,9 @@ class CourseListView(View):
     def get(self, request):
         all_course = Course.objects.all().order_by('-add_time')
         hot_course = Course.objects.filter().order_by('-click_nums')[0:3]
+        search_key = request.GET.get('keywords','')
+        if search_key:
+            all_course = Course.objects.filter(Q(name__icontains=search_key)|Q(desc__icontains=search_key)|Q(detail__icontains=search_key))
         sort = request.GET.get('sort','')
         if sort == 'hot':
             all_course = all_course.order_by('-click_nums')
@@ -36,6 +40,7 @@ class CourseListView(View):
             'all_course': course,
             'hot_course': hot_course,
             'sort':sort,
+            'search_key':search_key,
         }
         return render(request,'course-list.html', data)
 
@@ -110,6 +115,7 @@ class CourseCommentView(LoginRequiredMixin, View):
             'other_courses': other_courses,
         }
         return render(request, 'course-comment.html', data)
+
 
 class AddComment(View):
     def post(self,request):
